@@ -1,4 +1,4 @@
-wordlist
-========
+Words
+=====
 
-Personalized Word List Generation Scripts
+Tool to help expand English reading and recite new words
