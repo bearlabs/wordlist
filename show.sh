@@ -1,15 +1,21 @@
 #!/bin/bash
 
 DIR=`dirname $0`
-FILE="$DIR/.info"
+DATA="$DIR/.data"
+LIST="$DATA/.`date +"%Y-%m-%d"`.list"
 
+if [ ! -d $DATA ]; then
+	mkdir $DATA
+fi
+
+# $1: file, $2: attr
 function GET
 {
-        if [ ! -e $FILE ]; then
+        if [ ! -e $1 ]; then
                 echo ""
         else
 		LINE=""
-                FIELD=$1
+                FIELD=$2
                 LINE=`grep -i $FIELD $FILE`
 		if [ -z LINE ]; then
 			echo ""
@@ -19,22 +25,78 @@ function GET
         fi
 }
 
+#TODO: detect non-existence article id
+# $1: file, $2: attr, $3: value
 function SET
 {
-	echo "$1=$2" > $FILE	
-        if [ ! -z $POS ] && [ x"$1" != x"POS" ]; then
-                echo "POS=$POS" >> $FILE
+	# SET for the .list
+	if [ x"$2" != x"POS" ] && [ x"$2" != x"LEN" ] && [ x"$2" != x"DIC" ]; then
+		OLDIFS=$IFS
+		IFS=$'\n'
+		if [ -e $1 ]; then
+			LINES="`cat $1`"
+		fi
+		echo "$2=$3" > $1
+		for line in $LINES; do
+			FIELD=`echo $line | awk -F '=' '{print $1}'`
+			VALUE=`echo $line | awk -F '=' '{print $2}'`
+			if [ "$2" != "$FIELD" ]; then
+				echo $FIELD="$VALUE" >> $1
+			fi
+		done
+		IFS=$OLDIFS
+		return
 	fi
-        if [ ! -z $LEN ] && [ x"$1" != x"LEN" ]; then
-                echo "LEN=$LEN" >> $FILE
+
+	# SET for the .info
+	echo "$2=$3" > $1
+        if [ ! -z $POS ] && [ x"$2" != x"POS" ]; then
+                echo "POS=$POS" >> $1
 	fi
-        if [ ! -z "$DIC" ] && [ x"$1" != x"DIC" ]; then
-                echo "DIC=$DIC" >> $FILE
+        if [ ! -z $LEN ] && [ x"$2" != x"LEN" ]; then
+                echo "LEN=$LEN" >> $1
+	fi
+        if [ ! -z "$DIC" ] && [ x"$2" != x"DIC" ]; then
+                echo "DIC=$DIC" >> $1
         fi
 }
 
+if [ ! -z $1 ]; then 
+	# article ID is provided in $1
+	if [[ ! "$1" == *[!0-9]* ]]; then
+		ID=$1
+		FILE="$DATA/.$ID.info"
+	# no article ID; but command: clean
+	elif [ x"$1" == x"clean" ]; then
+		rm -rf $DATA
+		echo ""
+		echo "All Marks Removed"
+		echo ""
+		exit 0
+	elif [ x"$1" == x"list" ]; then
+		if [ ! -e $LIST ]; then
+			exit 1
+		fi
+		OLDIFS=$IFS
+                IFS=$'\n'
+		LINES="`cat $LIST`"	
+		#	echo ""
+		for line in $LINES; do
+			ID=`echo $line | awk -F '=' '{print $1}'`
+			DIC="`echo $line | awk -F '=' '{print $2}'`"
+			IFS=$OLDIFS
+			for pos in $DIC; do
+				$DIR/$0 $ID $pos ec	
+			done
+			IFS=$'\n'
+		#	echo ""
+		done
+		IFS=$OLDIFS
+		exit 0
+	fi
+fi
+
 if [ -z $1 ]; then
-	rm -rf $FILE
 	$DIR/en/list.sh -l
 elif [ -z $2 ]; then
 	EN=`$DIR/en/list.sh $1`
@@ -43,7 +105,7 @@ elif [ -z $2 ]; then
 	POS=0
 	while [ $POS -lt $NUM ]; do
 		POS=`expr $POS + 1`
-		DIC=$(GET DIC)
+		DIC=$(GET $FILE DIC)
 		if [ ! -z "$DIC" ]; then
 			if [[ $DIC =~ (^| )$POS($| ) ]]; then
 				$0 $1 $2 $POS ec
@@ -53,22 +115,29 @@ elif [ -z $2 ]; then
 		fi
 	done
 else
-	LEN=$(GET LEN)
-	DIC=$(GET DIC)
+	LEN=$(GET $FILE LEN)
+	DIC=$(GET $FILE DIC)
 	if [ "$LEN" == "" ]; then
 		LEN=`$DIR/en/list.sh $1 -10` # -10 indicates to get size
-		SET LEN $LEN
+		SET $FILE LEN $LEN
 	fi
 	if [ -z "$2" ] || [[ "$2" == *[!0-9]* ]]; then
-		POS=$(GET POS)
+		POS=$(GET $FILE POS)
 		if [ -z $POS ]; then
 			POS=0
-			SET POS $POS
+			SET $FILE POS $POS
 		fi	
-		if [ "$2" == "exit" ] || [ "$2" == "e" ]; then
+		if [ "$2" == "clean" ] || [ "$2" == "c" ]; then
 			rm -rf $FILE
 			echo ""
-			echo "Position Mark Removed"
+			echo "Marks Removed"
+			echo ""
+			exit 0
+		elif [ "$2" == "save" ] || [ "$2" == "s" ]; then
+			DIC=$(GET $FILE DIC)
+			SET $LIST $ID "$DIC"					
+			echo ""
+			echo "Marks Saved"
 			echo ""
 			exit 0
 		elif [ "$2" == "mark" ] || [ "$2" == "m" ]; then
@@ -78,10 +147,10 @@ else
 				else
 					DIC="$DIC $POS"
 				fi
-				SET DIC "$DIC"
+				SET $FILE DIC "$DIC"
 			fi
 			echo ""
-			echo "Word has been marked successfully"
+			echo "Word Marked" 
 			echo ""
 			exit 0
 		elif [ "$2" == "head" ] || [ "$2" == "h" ]; then
@@ -108,7 +177,7 @@ else
 			clear
 			echo ""
 		fi
-		SET POS $POS
+		SET $FILE POS $POS
 		echo "#($POS/$LEN)"
 		echo ""
 		EN=`$DIR/en/list.sh $1 $POS`
