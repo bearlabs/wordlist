@@ -23,7 +23,7 @@ function GET
         else
 		LINE=""
                 FIELD=$2
-                LINE=`grep -i $FIELD $FILE`
+                LINE=`grep -i $FIELD $1`
 		if [ -z LINE ]; then
 			echo ""
 		fi
@@ -88,19 +88,60 @@ if [ ! -z $1 ]; then
 		OLDIFS=$IFS
                 IFS=$'\n'
 		LINES="`cat $LIST`"	
-		#	echo ""
-		for line in $LINES; do
-			ID=`echo $line | awk -F '=' '{print $1}'`
-			DIC="`echo $line | awk -F '=' '{print $2}'`"
-			IFS=$OLDIFS
-			for pos in $DIC; do
-				$DIR/$0 $ID $pos ec	
+		if [ -z "$2" ]; then
+			for line in $LINES; do
+				ID=`echo $line | awk -F '=' '{print $1}'`
+				DIC="`echo $line | awk -F '=' '{print $2}'`"
+				IFS=$OLDIFS
+				for pos in $DIC; do
+					$DIR/$0 $ID $pos ec	
+				done
+				IFS=$'\n'
 			done
-			IFS=$'\n'
-		#	echo ""
-		done
-		IFS=$OLDIFS
-		exit 0
+			IFS=$OLDIFS
+			exit 0
+		elif [ "$2" == "next" ] || [ "$2" == "n" ]; then
+			LEN=0
+			CUR=0
+			LLIST=$LIST.info
+			POS=$(GET $LLIST POS)
+			if [ -z "$POS" ]; then
+				POS=1
+			fi
+                	for line in $LINES; do
+				IFS=$OLDIFS
+				ID=`echo $line | awk -F '=' '{print $1}'`
+                        	DIC="`echo $line | awk -F '=' '{print $2}'`"
+                        	if [ ! -z "$DIC" ]; then
+                                	NUM=`echo "$DIC" | awk -F ' ' '{print NF}'`
+					BUND=`expr $CUR + $NUM`
+					if [ $POS -lt $BUND ] || [ $POS -eq $BUND ]; then
+						for pos in $DIC; do
+							CUR=`expr $CUR + 1`
+							if [ "$CUR" == "$POS" ]; then
+								LID=$ID
+								LPOS=$pos
+								NEXTPOS=`expr $POS + 1`
+								SET $LLIST POS $NEXTPOS
+							fi
+						done		
+					else
+						CUR=`expr $CUR + $NUM`
+					fi
+                        	else
+                                	NUM=0
+                        	fi
+                        	LEN=`expr $LEN + $NUM`
+				IFS=$'\n'
+                	done
+			if [ $POS -lt $LEN ]; then
+				POS=`expr $POS + 1`
+			fi
+			SET $LLIST LEN $LEN
+                        $DIR/$0 $LID $LPOS ec
+			IFS=$OLDIFS
+			exit 0
+		fi
 	elif [ x"$1" == x"passed" ] || [ x"$1" == x"p" ]; then
 		if [ ! -e $LIST ]; then
                         exit 1
@@ -108,7 +149,6 @@ if [ ! -z $1 ]; then
                 OLDIFS=$IFS
                 IFS=$'\n'
                 LINES="`cat $LIST`"
-                #       echo ""
                 for line in $LINES; do
                         ID=`echo $line | awk -F '=' '{print $1}'`
                         DIC="`echo $line | awk -F '=' '{print $2}'`"
@@ -124,7 +164,6 @@ if [ ! -z $1 ]; then
 					$DIR/$0 $ID $pos ec	
 				fi
 			done
-                #       echo ""
                 done
                 IFS=$OLDIFS
                 exit 0
