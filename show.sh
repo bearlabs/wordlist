@@ -2,8 +2,8 @@
 
 DIR=`dirname $0`
 DATA="$HOME/.words"
-FILE="$DATA/posts/.notitle.info"
-LIST="$DATA/lists/.`date +"%Y-%m-%d"`.list"
+FILE="$DATA/posts/title.info"
+LIST="$DATA/lists/`date +"%Y-%m-%d"`.list"
 
 if [ ! -d $DATA ]; then
 	mkdir $DATA
@@ -72,7 +72,7 @@ if [ ! -z $1 ]; then
 	# article ID is provided in $1
 	if [[ ! "$1" == *[!0-9]* ]]; then
 		ID=$1
-		FILE="$DATA/posts/.$ID.info"
+		FILE="$DATA/posts/$ID.info"
 	# no article ID; but command: clean
 	elif [ x"$1" == x"reset" ] || [ x"$1" == x"r" ]; then
 		rm -rf $DATA
@@ -82,6 +82,7 @@ if [ ! -z $1 ]; then
 		exit 0
 	elif [ x"$1" == x"marked" ] || [ x"$1" == x"m" ]; then
 		if [ ! -e $LIST ]; then
+			echo $LIST
 			exit 1
 		fi
 		OLDIFS=$IFS
