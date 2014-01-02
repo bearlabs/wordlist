@@ -1,11 +1,18 @@
 #!/bin/bash
 
 DIR=`dirname $0`
-DATA="$DIR/.data"
-LIST="$DATA/.`date +"%Y-%m-%d"`.list"
+DATA="$HOME/.words"
+FILE="$DATA/posts/.notitle.info"
+LIST="$DATA/lists/.`date +"%Y-%m-%d"`.list"
 
 if [ ! -d $DATA ]; then
 	mkdir $DATA
+fi
+if [ ! -d $DATA/posts ]; then
+	mkdir $DATA/posts
+fi
+if [ ! -d $DATA/lists ]; then
+	mkdir $DATA/lists
 fi
 
 # $1: file, $2: attr
@@ -65,15 +72,15 @@ if [ ! -z $1 ]; then
 	# article ID is provided in $1
 	if [[ ! "$1" == *[!0-9]* ]]; then
 		ID=$1
-		FILE="$DATA/.$ID.info"
+		FILE="$DATA/posts/.$ID.info"
 	# no article ID; but command: clean
-	elif [ x"$1" == x"clean" ]; then
+	elif [ x"$1" == x"reset" ] || [ x"$1" == x"r" ]; then
 		rm -rf $DATA
 		echo ""
-		echo "All Marks Removed"
+		echo "All Marks Reset"
 		echo ""
 		exit 0
-	elif [ x"$1" == x"list" ]; then
+	elif [ x"$1" == x"marked" ] || [ x"$1" == x"m" ]; then
 		if [ ! -e $LIST ]; then
 			exit 1
 		fi
@@ -93,6 +100,33 @@ if [ ! -z $1 ]; then
 		done
 		IFS=$OLDIFS
 		exit 0
+	elif [ x"$1" == x"passed" ] || [ x"$1" == x"p" ]; then
+		if [ ! -e $LIST ]; then
+                        exit 1
+                fi
+                OLDIFS=$IFS
+                IFS=$'\n'
+                LINES="`cat $LIST`"
+                #       echo ""
+                for line in $LINES; do
+                        ID=`echo $line | awk -F '=' '{print $1}'`
+                        DIC="`echo $line | awk -F '=' '{print $2}'`"
+			if [ -z $DIC ]; then
+				$DIR/$0 $ID
+				continue
+			fi
+			LEN=`$DIR/en/list.sh $ID -10`
+			pos=0
+			while [ $pos -lt $LEN ]; do
+				pos=`expr $pos + 1`
+				if [[ ! $DIC =~ (^| )$pos($| ) ]]; then
+					$DIR/$0 $ID $pos ec	
+				fi
+			done
+                #       echo ""
+                done
+                IFS=$OLDIFS
+                exit 0
 	fi
 fi
 
@@ -127,10 +161,10 @@ else
 			POS=0
 			SET $FILE POS $POS
 		fi	
-		if [ "$2" == "clean" ] || [ "$2" == "c" ]; then
+		if [ "$2" == "reset" ] || [ "$2" == "r" ]; then
 			rm -rf $FILE
 			echo ""
-			echo "Marks Removed"
+			echo "Marks Reset"
 			echo ""
 			exit 0
 		elif [ "$2" == "save" ] || [ "$2" == "s" ]; then
