@@ -225,9 +225,9 @@ else
 	elif [ "$3" == "cn" ] || [ "$3" == "c" ]; then
 		echo $CN
 	elif [ "$3" == "ec" ]; then
-		printf "%16s\t\t\t%s\n" "$EN" $CN
+		printf "%16s\t\t\t%s\n" "$EN" "$CN"
 	elif [ "$3" == "ce" ]; then
-		printf "%16s\t\t\t%s\n" $CN "$EN"
+		printf "%16s\t\t\t%s\n" "$CN" "$EN"
 	fi
 	if [ -z "$2" ] || [[ "$2" == *[!0-9]* ]]; then
 		echo ""
