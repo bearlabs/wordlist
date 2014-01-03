@@ -6,6 +6,11 @@ FILE="$DATA/posts/title.info"
 LIST="$DATA/lists/`date +"%Y-%m-%d"`.list"
 SHOW="$DIR/article.sh"
 
+HOST="DBHOST"
+USER="DBUSER"
+PASS="DBPASS"
+DB="DATABASE"
+
 function MAKEDIR
 {
 	if [ ! -d $DATA ]; then
