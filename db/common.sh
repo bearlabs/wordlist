@@ -52,12 +52,15 @@ function SET
                 if [ -e $1 ]; then
                         LINES="`cat $1`"
                 fi
-                echo "$2=$3" > $1
+		rm $1
+		touch $1
                 for line in $LINES; do
                         FIELD=`echo $line | awk -F '=' '{print $1}'`
                         VALUE=`echo $line | awk -F '=' '{print $2}'`
                         if [ "$2" != "$FIELD" ]; then
                                 echo $FIELD="$VALUE" >> $1
+			else
+                		echo "$2=$3" >> $1
                         fi
                 done
                 IFS=$OLDIFS

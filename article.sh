@@ -138,6 +138,8 @@ else
 	if [ -z "$2" ] || [[ "$2" == *[!0-9]* ]]; then
 		echo ""
 	else
+		DIC=`GET $FILE DIC`
+		POS=$2
                 if [ "$3" == "mark" ] || [ "$3" == "m" ]; then
                         if [[ ! $DIC =~ (^| )$POS($| ) ]]; then
                                 if [ -z "$DIC" ]; then
