@@ -60,18 +60,7 @@ if [ ! -z $1 ]; then
 		OLDIFS=$IFS
                 IFS=$'\n'
 		LINES="`cat $LIST`"	
-		if [ -z "$1" ]; then
-			for line in $LINES; do
-				ID=`echo $line | awk -F '=' '{print $1}'`
-				DIC="`echo $line | awk -F '=' '{print $2}'`"
-				IFS=$OLDIFS
-				for pos in $DIC; do
-					$SHOW $ID $pos ec	
-				done
-				IFS=$'\n'
-			done
-			IFS=$OLDIFS
-		elif [[ ! "$1" == *[!0-9]* ]]; then
+		if [[ ! "$1" == *[!0-9]* ]]; then
                         POS=$1
                         LEN=0
                         CUR=0
@@ -176,4 +165,18 @@ if [ ! -z $1 ]; then
 			$DIR/$0 $POS unmark
 		fi
 	fi
+else
+        OLDIFS=$IFS
+        IFS=$'\n'
+        LINES="`cat $LIST`"
+        for line in $LINES; do
+        	ID=`echo $line | awk -F '=' '{print $1}'`
+                DIC="`echo $line | awk -F '=' '{print $2}'`"
+                IFS=$OLDIFS
+                for pos in $DIC; do
+                	$SHOW $ID $pos ec
+                done
+                IFS=$'\n'
+        done
+        IFS=$OLDIFS
 fi
