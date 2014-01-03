@@ -51,9 +51,10 @@ function SET
                 IFS=$'\n'
                 if [ -e $1 ]; then
                         LINES="`cat $1`"
-                fi
-		rm $1
+			rm $1
+		fi
 		touch $1
+		FOUND=false
                 for line in $LINES; do
                         FIELD=`echo $line | awk -F '=' '{print $1}'`
                         VALUE=`echo $line | awk -F '=' '{print $2}'`
@@ -61,8 +62,12 @@ function SET
                                 echo $FIELD="$VALUE" >> $1
 			else
                 		echo "$2=$3" >> $1
+				FOUND=true
                         fi
                 done
+		if ! $FOUND; then
+			echo "$2=$3" >> $1
+		fi
                 IFS=$OLDIFS
                 return
         fi
