@@ -5,6 +5,14 @@ source "$DIR/db/common.sh"
 
 MAKEDIR
 
+if [ ! -z $1 ]; then
+        # article ID is provided in $1
+        if [[ ! "$1" == *[!0-9]* ]]; then
+                ID=$1
+                FILE="$DATA/posts/$ID.info"
+	fi
+fi
+
 if [ -z $1 ]; then
 	$DIR/en/list.sh -l
 elif [ -z $2 ]; then
@@ -94,6 +102,7 @@ else
 	else
 		EN=`$DIR/en/list.sh $1 $2`
 		CN=`$DIR/cn/list.sh $1 $2`
+		SET $FILE POS $2
 	fi
 	if [ -z "$3" ] || [ "$3" == "en" ] || [ "$3" == "n" ]; then
 		echo $EN
